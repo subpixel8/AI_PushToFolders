@@ -242,7 +242,7 @@ void printUsage(const fs::path &logPath) {
               << "  PushToFolders <image1> <image2> ...     (Explorer selection mode)\n"
               << "  PushToFolders --show-log               (display error log)\n"
               << "  PushToFolders --clear-log              (clear error log)\n\n"
-              << "Log file: " << logPath.u8string() << "\n";
+               << "Log file: " << logPath.u8string() << "\n";
 }
 
 bool ensureDirectory(const fs::path &dir, Logger &logger) {
