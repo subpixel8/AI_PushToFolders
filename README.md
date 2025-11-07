@@ -82,42 +82,44 @@ The context menu is configured with a small registry script. The script adds a *
    @="Push images into folders"
    "Icon"="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\""
 
-   [HKEY_CLASSES_ROOT\SystemFileAssociations\.jpg\Shell\PushToFolders\Command]
-   @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" \"%*\""
+  [HKEY_CLASSES_ROOT\SystemFileAssociations\.jpg\Shell\PushToFolders\Command]
+  @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" %*"
 
    [HKEY_CLASSES_ROOT\SystemFileAssociations\.jpeg\Shell\PushToFolders]
    @="Push images into folders"
    "Icon"="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\""
 
-   [HKEY_CLASSES_ROOT\SystemFileAssociations\.jpeg\Shell\PushToFolders\Command]
-   @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" \"%*\""
+  [HKEY_CLASSES_ROOT\SystemFileAssociations\.jpeg\Shell\PushToFolders\Command]
+  @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" %*"
 
    [HKEY_CLASSES_ROOT\SystemFileAssociations\.png\Shell\PushToFolders]
    @="Push images into folders"
    "Icon"="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\""
 
-   [HKEY_CLASSES_ROOT\SystemFileAssociations\.png\Shell\PushToFolders\Command]
-   @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" \"%*\""
+  [HKEY_CLASSES_ROOT\SystemFileAssociations\.png\Shell\PushToFolders\Command]
+  @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" %*"
 
    [HKEY_CLASSES_ROOT\SystemFileAssociations\.bmp\Shell\PushToFolders]
    @="Push images into folders"
    "Icon"="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\""
 
-   [HKEY_CLASSES_ROOT\SystemFileAssociations\.bmp\Shell\PushToFolders\Command]
-   @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" \"%*\""
+  [HKEY_CLASSES_ROOT\SystemFileAssociations\.bmp\Shell\PushToFolders\Command]
+  @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" %*"
 
    [HKEY_CLASSES_ROOT\SystemFileAssociations\.webp\Shell\PushToFolders]
    @="Push images into folders"
    "Icon"="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\""
 
-   [HKEY_CLASSES_ROOT\SystemFileAssociations\.webp\Shell\PushToFolders\Command]
-   @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" \"%*\""
+  [HKEY_CLASSES_ROOT\SystemFileAssociations\.webp\Shell\PushToFolders\Command]
+  @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" %*"
    ```
 
 3. Save the file as `PushToFolders_ContextMenu.reg`.
 4. Double-click the saved file and confirm the prompts to add it to the registry.
 
 The command above registers the same handler for every supported file extension. When you select multiple files and choose **Push images into folders**, Windows passes all selected paths to the executable in one invocation.
+
+> **Note:** Do not wrap `%*` in extra quotation marks. Windows automatically quotes each selected file, and additional quoting prevents the program from seeing every file separately.
 
 To remove the menu entry later, create another file named `Remove_PushToFolders_ContextMenu.reg` with the following content and run it:
 

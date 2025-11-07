@@ -242,7 +242,7 @@ void printUsage(const fs::path &logPath) {
               << "  PushToFolders <image1> <image2> ...     (Explorer selection mode)\n"
               << "  PushToFolders --show-log               (display error log)\n"
               << "  PushToFolders --clear-log              (clear error log)\n\n"
-               << "Log file: " << logPath.u8string() << "\n";
+              << "Log file: " << logPath.u8string() << "\n";
 }
 
 bool ensureDirectory(const fs::path &dir, Logger &logger) {
@@ -399,7 +399,37 @@ bool clearLogFile(const fs::path &path) {
     return static_cast<bool>(output);
 }
 
-int runApplication(const std::vector<PathString> &args) {
+#ifdef _WIN32
+std::vector<PathString> normaliseArguments(std::vector<PathString> args) {
+    std::vector<PathString> normalised;
+    normalised.reserve(args.size());
+
+    for (auto &arg : args) {
+        if (arg.find(L'"') != PathString::npos) {
+            int expandedCount = 0;
+            if (LPWSTR *expanded = CommandLineToArgvW(arg.c_str(), &expandedCount)) {
+                for (int i = 0; i < expandedCount; ++i) {
+                    normalised.emplace_back(expanded[i]);
+                }
+                LocalFree(expanded);
+                continue;
+            }
+        }
+
+        normalised.push_back(std::move(arg));
+    }
+
+    return normalised;
+}
+#else
+std::vector<PathString> normaliseArguments(std::vector<PathString> args) {
+    return args;
+}
+#endif
+
+int runApplication(std::vector<PathString> args) {
+    args = normaliseArguments(std::move(args));
+
     Logger logger;
     if (args.empty()) {
         printUsage(logger.path());
@@ -486,7 +516,7 @@ int APIENTRY wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
         SetConsoleCP(CP_UTF8);
     }
 
-    int result = runApplication(args);
+    int result = runApplication(std::move(args));
 
     if (attachedConsole) {
         FreeConsole();
@@ -503,7 +533,7 @@ int main(int argc, char *argv[]) {
     for (int i = 1; i < argc; ++i) {
         args.emplace_back(argv[i]);
     }
-    return runApplication(args);
+    return runApplication(std::move(args));
 }
 #endif
 
