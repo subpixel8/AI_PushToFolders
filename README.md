@@ -34,10 +34,12 @@ The project contains a single C++ source file that targets C++17 and only depend
    * Copy the repository folder to a convenient location if you have not already done so (for example `C:\tools\PushToFolders`).
    ```cmd
    cd C:\tools\PushToFolders
-   cl /std:c++17 /EHsc /O2 /W4 /MT /Fe:PushToFolders.exe src\main.cpp
+   cl /std:c++17 /EHsc /O2 /W4 /MT /Fe:PushToFolders.exe src\main.cpp /link /SUBSYSTEM:WINDOWS
    ```
 
    The `/MT` switch links the static Microsoft C++ runtime so that `PushToFolders.exe` is fully self-contained and does not require separate redistributable packages.
+
+   Adding `/SUBSYSTEM:WINDOWS` prevents an extra console window from appearing when the tool is launched from File Explorer while still allowing it to reuse the console that invoked it from the command line.
 
 4. **Copy the executable** (`PushToFolders.exe`) to a folder that is easy to reference, for example `C:\Program Files\PushToFolders`. You can safely delete the source files if you only need the executable afterwards.
 
@@ -58,6 +60,8 @@ PushToFolders --clear-log
 
 Successful operations are echoed to the console, while errors are written both to the console (when available) and to the log file.
 
+> **Tip:** When the tool is started from File Explorer it does not display a console window. Run `PushToFolders --show-log` later to review the log or use the command line directly if you want to watch progress in real time.
+
 ### Log file location
 
 The log file is stored inside your `%LOCALAPPDATA%\PushToFolders` folder. If that folder cannot be created, the program falls back to the system temporary directory.
@@ -72,39 +76,39 @@ The context menu is configured with a small registry script. The script adds a *
    ```reg
    Windows Registry Editor Version 5.00
 
-   [HKEY_CLASSES_ROOT\SystemFileAssociations\.jpg\shell\PushToFolders]
+   [HKEY_CLASSES_ROOT\SystemFileAssociations\.jpg\Shell\PushToFolders]
    @="Push images into folders"
    "Icon"="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\""
 
-   [HKEY_CLASSES_ROOT\SystemFileAssociations\.jpg\shell\PushToFolders\command]
+   [HKEY_CLASSES_ROOT\SystemFileAssociations\.jpg\Shell\PushToFolders\Command]
    @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" \"%1\""
 
-   [HKEY_CLASSES_ROOT\SystemFileAssociations\.jpeg\shell\PushToFolders]
+   [HKEY_CLASSES_ROOT\SystemFileAssociations\.jpeg\Shell\PushToFolders]
    @="Push images into folders"
    "Icon"="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\""
 
-   [HKEY_CLASSES_ROOT\SystemFileAssociations\.jpeg\shell\PushToFolders\command]
+   [HKEY_CLASSES_ROOT\SystemFileAssociations\.jpeg\Shell\PushToFolders\Command]
    @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" \"%1\""
 
-   [HKEY_CLASSES_ROOT\SystemFileAssociations\.png\shell\PushToFolders]
+   [HKEY_CLASSES_ROOT\SystemFileAssociations\.png\Shell\PushToFolders]
    @="Push images into folders"
    "Icon"="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\""
 
-   [HKEY_CLASSES_ROOT\SystemFileAssociations\.png\shell\PushToFolders\command]
+   [HKEY_CLASSES_ROOT\SystemFileAssociations\.png\Shell\PushToFolders\Command]
    @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" \"%1\""
 
-   [HKEY_CLASSES_ROOT\SystemFileAssociations\.bmp\shell\PushToFolders]
+   [HKEY_CLASSES_ROOT\SystemFileAssociations\.bmp\Shell\PushToFolders]
    @="Push images into folders"
    "Icon"="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\""
 
-   [HKEY_CLASSES_ROOT\SystemFileAssociations\.bmp\shell\PushToFolders\command]
+   [HKEY_CLASSES_ROOT\SystemFileAssociations\.bmp\Shell\PushToFolders\Command]
    @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" \"%1\""
 
-   [HKEY_CLASSES_ROOT\SystemFileAssociations\.webp\shell\PushToFolders]
+   [HKEY_CLASSES_ROOT\SystemFileAssociations\.webp\Shell\PushToFolders]
    @="Push images into folders"
    "Icon"="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\""
 
-   [HKEY_CLASSES_ROOT\SystemFileAssociations\.webp\shell\PushToFolders\command]
+   [HKEY_CLASSES_ROOT\SystemFileAssociations\.webp\Shell\PushToFolders\Command]
    @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" \"%1\""
    ```
 
@@ -118,11 +122,11 @@ To remove the menu entry later, create another file named `Remove_PushToFolders_
 ```reg
 Windows Registry Editor Version 5.00
 
-[-HKEY_CLASSES_ROOT\SystemFileAssociations\.jpg\shell\PushToFolders]
-[-HKEY_CLASSES_ROOT\SystemFileAssociations\.jpeg\shell\PushToFolders]
-[-HKEY_CLASSES_ROOT\SystemFileAssociations\.png\shell\PushToFolders]
-[-HKEY_CLASSES_ROOT\SystemFileAssociations\.bmp\shell\PushToFolders]
-[-HKEY_CLASSES_ROOT\SystemFileAssociations\.webp\shell\PushToFolders]
+[-HKEY_CLASSES_ROOT\SystemFileAssociations\.jpg\Shell\PushToFolders]
+[-HKEY_CLASSES_ROOT\SystemFileAssociations\.jpeg\Shell\PushToFolders]
+[-HKEY_CLASSES_ROOT\SystemFileAssociations\.png\Shell\PushToFolders]
+[-HKEY_CLASSES_ROOT\SystemFileAssociations\.bmp\Shell\PushToFolders]
+[-HKEY_CLASSES_ROOT\SystemFileAssociations\.webp\Shell\PushToFolders]
 ```
 
 ## Troubleshooting

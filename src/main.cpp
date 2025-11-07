@@ -13,6 +13,13 @@
 #include <string_view>
 #include <vector>
 
+#ifdef _WIN32
+#define NOMINMAX
+#include <cstdio>
+#include <shellapi.h>
+#include <windows.h>
+#endif
+
 namespace fs = std::filesystem;
 
 namespace {
@@ -322,15 +329,36 @@ int runApplication(const std::vector<PathString> &args) {
 } // namespace
 
 #ifdef _WIN32
-int wmain(int argc, wchar_t *argv[]) {
+int APIENTRY wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
+    int argc = 0;
     std::vector<PathString> args;
-    if (argc > 1) {
-        args.reserve(static_cast<size_t>(argc - 1));
+    if (LPWSTR *argv = CommandLineToArgvW(GetCommandLineW(), &argc)) {
+        if (argc > 1) {
+            args.reserve(static_cast<size_t>(argc - 1));
+            for (int i = 1; i < argc; ++i) {
+                args.emplace_back(argv[i]);
+            }
+        }
+        LocalFree(argv);
     }
-    for (int i = 1; i < argc; ++i) {
-        args.emplace_back(argv[i]);
+
+    bool attachedConsole = false;
+    if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+        attachedConsole = true;
+
+        FILE *dummy = nullptr;
+        freopen_s(&dummy, "CONOUT$", "w", stdout);
+        freopen_s(&dummy, "CONOUT$", "w", stderr);
+        freopen_s(&dummy, "CONIN$", "r", stdin);
     }
-    return runApplication(args);
+
+    int result = runApplication(args);
+
+    if (attachedConsole) {
+        FreeConsole();
+    }
+
+    return result;
 }
 #else
 int main(int argc, char *argv[]) {
