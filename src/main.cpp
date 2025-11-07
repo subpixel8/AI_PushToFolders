@@ -194,6 +194,10 @@ public:
         }
     }
 
+    void logExecutionFailure(std::string_view message) {
+        logError({}, message);
+    }
+
     void logInfo(std::string_view message) {
         std::lock_guard<std::mutex> lock(mutex_);
         if (stream_) {
@@ -401,6 +405,7 @@ int runApplication(std::vector<PathString> args) {
 
     Logger logger;
     if (args.empty()) {
+        logger.logExecutionFailure("Execution failed: No input was provided.");
         printUsage(logger.path());
         return 1;
     }
@@ -410,48 +415,91 @@ int runApplication(std::vector<PathString> args) {
     const PathString clearLogLong = PATH_LITERAL("--clear-log");
     const PathString clearLogShort = PATH_LITERAL("/clearlog");
 
-    if (args.size() == 1) {
-        if (args[0] == showLogLong || args[0] == showLogShort) {
-            auto contents = readFileContents(logger.path());
-            if (!contents) {
-                std::cerr << "No log file found at " << logger.path().u8string() << "\n";
-                return 1;
-            }
-            std::cout << "Log file: " << logger.path().u8string() << "\n" << *contents;
-            return 0;
+    bool showLogRequested = false;
+    bool clearLogRequested = false;
+    std::vector<PathString> positional;
+    positional.reserve(args.size());
+
+    for (auto &arg : args) {
+        if (arg == showLogLong || arg == showLogShort) {
+            showLogRequested = true;
+            continue;
         }
-        if (args[0] == clearLogLong || args[0] == clearLogShort) {
-            if (clearLogFile(logger.path())) {
-                std::cout << "Log file cleared: " << logger.path().u8string() << "\n";
-                return 0;
+        if (arg == clearLogLong || arg == clearLogShort) {
+            clearLogRequested = true;
+            continue;
+        }
+        positional.emplace_back(std::move(arg));
+    }
+
+    bool anyActionPerformed = false;
+    int cumulativeStatus = 0;
+
+    if (showLogRequested) {
+        anyActionPerformed = true;
+        auto contents = readFileContents(logger.path());
+        if (!contents) {
+            logger.logExecutionFailure("Execution failed: Unable to read the log file.");
+            std::cerr << "No log file found at " << logger.path().u8string() << "\n";
+            cumulativeStatus = 1;
+        } else {
+            std::cout << "Log file: " << logger.path().u8string() << "\n" << *contents;
+            if (!contents->empty() && contents->back() != '\n') {
+                std::cout << '\n';
             }
-            std::cerr << "Unable to clear log file at " << logger.path().u8string() << "\n";
-            return 1;
         }
     }
 
-    if (args.size() == 1) {
-        fs::path potentialDirectory(args[0]);
+    if (clearLogRequested) {
+        anyActionPerformed = true;
+        if (clearLogFile(logger.path())) {
+            std::cout << "Log file cleared: " << logger.path().u8string() << "\n";
+        } else {
+            logger.logExecutionFailure("Execution failed: Unable to clear the log file.");
+            std::cerr << "Unable to clear log file at " << logger.path().u8string() << "\n";
+            cumulativeStatus = 1;
+        }
+    }
+
+    if (positional.empty()) {
+        if (anyActionPerformed) {
+            return cumulativeStatus == 0 ? 0 : 1;
+        }
+        logger.logExecutionFailure("Execution failed: No input was provided.");
+        printUsage(logger.path());
+        return 1;
+    }
+
+    if (positional.size() == 1) {
+        fs::path potentialDirectory(positional[0]);
         std::error_code ec;
         if (fs::exists(potentialDirectory, ec) && fs::is_directory(potentialDirectory, ec)) {
             bool success = processDirectory(potentialDirectory, logger);
             std::cout << "Finished processing folder." << std::endl;
             std::cout << "Check the log for any errors: " << logger.path().u8string() << "\n";
-            return success ? 0 : 1;
+            if (!success) {
+                logger.logExecutionFailure("Execution failed while processing a folder. See previous log entries for details.");
+            }
+            cumulativeStatus = (cumulativeStatus == 0 && success) ? 0 : 1;
+            return cumulativeStatus == 0 ? 0 : 1;
         }
         // Not a directory: treat as single file
     }
 
     std::vector<fs::path> filePaths;
-    filePaths.reserve(args.size());
-    for (const auto &arg : args) {
+    filePaths.reserve(positional.size());
+    for (const auto &arg : positional) {
         filePaths.emplace_back(arg);
     }
 
     bool success = processFiles(filePaths, logger);
     std::cout << "Finished processing files. Check the log for any errors: "
               << logger.path().u8string() << "\n";
-    return success ? 0 : 1;
+    if (!success) {
+        logger.logExecutionFailure("Execution failed while processing files. See previous log entries for details.");
+    }
+    cumulativeStatus = (cumulativeStatus == 0 && success) ? 0 : 1;
+    return cumulativeStatus == 0 ? 0 : 1;
 }
 
 #undef PATH_LITERAL
@@ -472,10 +520,7 @@ int APIENTRY wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
         LocalFree(argv);
     }
 
-    bool attachedConsole = false;
     if (AttachConsole(ATTACH_PARENT_PROCESS)) {
-        attachedConsole = true;
-
         FILE *dummy = nullptr;
         freopen_s(&dummy, "CONOUT$", "w", stdout);
         freopen_s(&dummy, "CONOUT$", "w", stderr);
@@ -486,10 +531,6 @@ int APIENTRY wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
     }
 
     int result = runApplication(std::move(args));
-
-    if (attachedConsole) {
-        FreeConsole();
-    }
 
     return result;
 }

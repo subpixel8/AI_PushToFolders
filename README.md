@@ -48,7 +48,7 @@ PushToFolders --clear-log
 
 * When you pass exactly one argument and it is a folder, the program scans it for regular files.
 * When you pass one or more file paths, each file is moved into a folder named after the file.
-* `--show-log` prints the error log, and `--clear-log` erases the log file so that the next run starts fresh.
+* `--show-log` prints the error log, and `--clear-log` erases the log file so that the next run starts fresh. You can pass both switches at the same time to review the current log before clearing it.
 
 Successful operations are echoed to the console, while errors are written both to the console (when available) and to the log file.
 
@@ -68,27 +68,28 @@ The context menu is configured with a small registry script. The script adds a *
    ```reg
    Windows Registry Editor Version 5.00
 
-   [HKEY_CLASSES_ROOT\*\Shell\PushToFolders]
+   [HKEY_CURRENT_USER\Software\Classes\*\Shell\PushToFolders]
    @="Push files into folders"
    "Icon"="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\""
+   "MultiSelectModel"="Document"
 
-   [HKEY_CLASSES_ROOT\*\Shell\PushToFolders\Command]
-   @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" %*"
+   [HKEY_CURRENT_USER\Software\Classes\*\Shell\PushToFolders\Command]
+   @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" \"%1\""
    ```
 
 3. Save the file as `PushToFolders_ContextMenu.reg`.
-4. Double-click the saved file and confirm the prompts to add it to the registry.
+4. Double-click the saved file and confirm the prompts to add it to the registry. Ensure the key names stay capitalised exactly as shown (`Shell` and `Command`) when editing the file manually.
 
-The command above registers the handler for every file type. When you select multiple files and choose **Push files into folders**, Windows passes all selected paths to the executable in one invocation.
+The command above registers the handler for every file type for the current user. The `MultiSelectModel` value instructs Windows to invoke the command separately for each selected item, ensuring that every highlighted file is forwarded to PushToFolders even though the command line uses `%1`.
 
-> **Note:** Do not wrap `%*` in extra quotation marks. Windows automatically quotes each selected file, and additional quoting prevents the program from seeing every file separately.
+> **Note:** If you previously imported an older script that used the `HKEY_CLASSES_ROOT` hive or `%*`, remove it with the uninstall snippet below before adding the new entry so that Windows picks up the corrected command line.
 
 To remove the menu entry later, create another file named `Remove_PushToFolders_ContextMenu.reg` with the following content and run it:
 
 ```reg
 Windows Registry Editor Version 5.00
 
-[-HKEY_CLASSES_ROOT\*\Shell\PushToFolders]
+[-HKEY_CURRENT_USER\Software\Classes\*\Shell\PushToFolders]
 ```
 
 ## Troubleshooting
