@@ -1,14 +1,10 @@
-#include <algorithm>
 #include <chrono>
-#include <cctype>
 #include <cstdlib>
-#include <cwctype>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <mutex>
 #include <optional>
-#include <set>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -124,26 +120,6 @@ bool createDirectoriesWin32(const fs::path &dir, std::string &errorMessage) {
 #define PATH_LITERAL(str) str
 #endif
 
-PathString toLowerCopy(PathString text) {
-    std::transform(text.begin(), text.end(), text.begin(), [](fs::path::value_type ch) {
-#ifdef _WIN32
-        return static_cast<fs::path::value_type>(std::towlower(ch));
-#else
-        return static_cast<fs::path::value_type>(std::tolower(static_cast<unsigned char>(ch)));
-#endif
-    });
-    return text;
-}
-
-bool isImageFile(const fs::path &path) {
-    static const std::set<PathString> kExtensions = {
-        PATH_LITERAL(".jpg"), PATH_LITERAL(".jpeg"), PATH_LITERAL(".png"), PATH_LITERAL(".bmp"), PATH_LITERAL(".webp")
-    };
-
-    auto ext = toLowerCopy(path.extension().native());
-    return kExtensions.count(ext) > 0;
-}
-
 std::string timestampForLog() {
     using clock = std::chrono::system_clock;
     auto now = clock::now();
@@ -236,10 +212,10 @@ private:
 };
 
 void printUsage(const fs::path &logPath) {
-    std::cout << "PushToFolders - Organise images into same-named folders\n\n"
+    std::cout << "PushToFolders - Organise files into same-named folders\n\n"
               << "Usage:\n"
               << "  PushToFolders \"C:/path/to/folder\"  (command line folder mode)\n"
-              << "  PushToFolders <image1> <image2> ...     (Explorer selection mode)\n"
+              << "  PushToFolders <file1> <file2> ...      (Explorer selection mode)\n"
               << "  PushToFolders --show-log               (display error log)\n"
               << "  PushToFolders --clear-log              (clear error log)\n\n"
               << "Log file: " << logPath.u8string() << "\n";
@@ -287,11 +263,6 @@ bool moveFileToFolder(const fs::path &filePath, Logger &logger) {
     if (!fs::is_regular_file(filePath, ec)) {
         logger.logError(filePath, "Path is not a regular file.");
         std::cerr << "Not a file: " << filePath.u8string() << "\n";
-        return false;
-    }
-
-    if (!isImageFile(filePath)) {
-        logger.logInfo(std::string("Skipping non-image file: ") + filePath.u8string());
         return false;
     }
 
@@ -351,15 +322,13 @@ bool processDirectory(const fs::path &directoryPath, Logger &logger) {
             continue;
         }
 
-        if (isImageFile(entry.path())) {
-            if (moveFileToFolder(entry.path(), logger)) {
-                anyProcessed = true;
-            }
+        if (moveFileToFolder(entry.path(), logger)) {
+            anyProcessed = true;
         }
     }
 
     if (!anyProcessed) {
-        std::cout << "No image files found in " << directoryPath.u8string() << "\n";
+        std::cout << "No files found to process in " << directoryPath.u8string() << "\n";
     }
 
     return anyProcessed;
@@ -374,7 +343,7 @@ bool processFiles(const std::vector<fs::path> &files, Logger &logger) {
     }
 
     if (!anyProcessed) {
-        std::cout << "No image files were processed.\n";
+        std::cout << "No files were processed.\n";
     }
 
     return anyProcessed;

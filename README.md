@@ -1,23 +1,13 @@
 # PushToFolders
 
-PushToFolders is a tiny Windows command line utility that sorts image files into folders that share their names. Each image is moved into a sibling folder whose name matches the file name (without the extension).
+PushToFolders is a tiny Windows command line utility that sorts files into folders that share their names. Each file is moved into a sibling folder whose name matches the file name (without the extension).
 
 The executable supports two usage scenarios:
 
-1. **Command line** — supply a single folder path and every supported image inside it is moved into a like-named folder.
-2. **Windows File Explorer context menu** — select one or more supported image files, invoke the tool, and each selected file is moved into its own folder.
+1. **Command line** — supply a single folder path and every file inside it is moved into a like-named folder.
+2. **Windows File Explorer context menu** — select one or more files, invoke the tool, and each selected file is moved into its own folder.
 
 All errors are written to a persistent log file so that you always have an audit trail of what happened.
-
-## Supported image formats
-
-* `.jpg`
-* `.jpeg`
-* `.png`
-* `.bmp`
-* `.webp`
-
-The comparison is case-insensitive.
 
 ## Building a standalone executable on Windows
 
@@ -49,15 +39,15 @@ Open *Command Prompt* and run one of the commands below. Always wrap paths that 
 
 ```cmd
 PushToFolders "C:\Users\you\Pictures"
-PushToFolders "C:\Users\you\Pictures\holiday.jpg" "D:\More Photos\portrait.png"
+PushToFolders "C:\Users\you\Documents\Report.docx" "D:\Archives\Budget.xlsx"
 PushToFolders --show-log
 PushToFolders --clear-log
 ```
 
-> **Important:** The program fully supports paths that contain characters such as ampersands (`&`), emoji, or characters from other languages. The Windows command interpreter treats `&` as a command separator, so if you type a command manually and the path contains `&`, escape it as `^&` (for example, `"C:\Games^&Art\cover.jpg"`). No extra steps are required when launching the tool from File Explorer.
+> **Important:** The program fully supports paths that contain characters such as ampersands (`&`), emoji, or characters from other languages. The Windows command interpreter treats `&` as a command separator, so if you type a command manually and the path contains `&`, escape it as `^&` (for example, `"C:\Games^&Art\cover.txt"`). No extra steps are required when launching the tool from File Explorer.
 
-* When you pass exactly one argument and it is a folder, the program scans it for supported image files.
-* When you pass one or more file paths, every supported image is moved into a folder named after the file.
+* When you pass exactly one argument and it is a folder, the program scans it for regular files.
+* When you pass one or more file paths, each file is moved into a folder named after the file.
 * `--show-log` prints the error log, and `--clear-log` erases the log file so that the next run starts fresh.
 
 Successful operations are echoed to the console, while errors are written both to the console (when available) and to the log file.
@@ -70,7 +60,7 @@ The log file is stored inside your `%LOCALAPPDATA%\PushToFolders` folder. If tha
 
 ## Adding the Windows File Explorer context menu entry
 
-The context menu is configured with a small registry script. The script adds a **"Push images into folders"** option when you right-click supported files.
+The context menu is configured with a small registry script. The script adds a **"Push files into folders"** option when you right-click any file.
 
 1. Open *Notepad*.
 2. Paste the snippet below and adjust the path so that it points to the actual location of `PushToFolders.exe`.
@@ -78,46 +68,18 @@ The context menu is configured with a small registry script. The script adds a *
    ```reg
    Windows Registry Editor Version 5.00
 
-   [HKEY_CLASSES_ROOT\SystemFileAssociations\.jpg\Shell\PushToFolders]
-   @="Push images into folders"
+   [HKEY_CLASSES_ROOT\*\Shell\PushToFolders]
+   @="Push files into folders"
    "Icon"="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\""
 
-  [HKEY_CLASSES_ROOT\SystemFileAssociations\.jpg\Shell\PushToFolders\Command]
-  @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" %*"
-
-   [HKEY_CLASSES_ROOT\SystemFileAssociations\.jpeg\Shell\PushToFolders]
-   @="Push images into folders"
-   "Icon"="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\""
-
-  [HKEY_CLASSES_ROOT\SystemFileAssociations\.jpeg\Shell\PushToFolders\Command]
-  @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" %*"
-
-   [HKEY_CLASSES_ROOT\SystemFileAssociations\.png\Shell\PushToFolders]
-   @="Push images into folders"
-   "Icon"="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\""
-
-  [HKEY_CLASSES_ROOT\SystemFileAssociations\.png\Shell\PushToFolders\Command]
-  @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" %*"
-
-   [HKEY_CLASSES_ROOT\SystemFileAssociations\.bmp\Shell\PushToFolders]
-   @="Push images into folders"
-   "Icon"="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\""
-
-  [HKEY_CLASSES_ROOT\SystemFileAssociations\.bmp\Shell\PushToFolders\Command]
-  @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" %*"
-
-   [HKEY_CLASSES_ROOT\SystemFileAssociations\.webp\Shell\PushToFolders]
-   @="Push images into folders"
-   "Icon"="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\""
-
-  [HKEY_CLASSES_ROOT\SystemFileAssociations\.webp\Shell\PushToFolders\Command]
-  @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" %*"
+   [HKEY_CLASSES_ROOT\*\Shell\PushToFolders\Command]
+   @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" %*"
    ```
 
 3. Save the file as `PushToFolders_ContextMenu.reg`.
 4. Double-click the saved file and confirm the prompts to add it to the registry.
 
-The command above registers the same handler for every supported file extension. When you select multiple files and choose **Push images into folders**, Windows passes all selected paths to the executable in one invocation.
+The command above registers the handler for every file type. When you select multiple files and choose **Push files into folders**, Windows passes all selected paths to the executable in one invocation.
 
 > **Note:** Do not wrap `%*` in extra quotation marks. Windows automatically quotes each selected file, and additional quoting prevents the program from seeing every file separately.
 
@@ -126,16 +88,12 @@ To remove the menu entry later, create another file named `Remove_PushToFolders_
 ```reg
 Windows Registry Editor Version 5.00
 
-[-HKEY_CLASSES_ROOT\SystemFileAssociations\.jpg\Shell\PushToFolders]
-[-HKEY_CLASSES_ROOT\SystemFileAssociations\.jpeg\Shell\PushToFolders]
-[-HKEY_CLASSES_ROOT\SystemFileAssociations\.png\Shell\PushToFolders]
-[-HKEY_CLASSES_ROOT\SystemFileAssociations\.bmp\Shell\PushToFolders]
-[-HKEY_CLASSES_ROOT\SystemFileAssociations\.webp\Shell\PushToFolders]
+[-HKEY_CLASSES_ROOT\*\Shell\PushToFolders]
 ```
 
 ## Troubleshooting
 
-* **Nothing happens:** The program skips files that are not one of the supported image formats. Check the console output or run `PushToFolders --show-log` to inspect the log file.
+* **Nothing happens:** Check the console output or run `PushToFolders --show-log` to inspect the log file. The log will explain whether the selected items were skipped.
 * **Folder already exists:** If the destination folder already contains a file with the same name, the program leaves the original file untouched and reports the error. Rename or remove the conflicting file, then run the utility again.
 * **Permission errors:** Ensure that you have permission to create folders and move files in the target location. If necessary, move the files into a folder where you have write access and run the tool again.
 
