@@ -54,6 +54,8 @@ PushToFolders --show-log
 PushToFolders --clear-log
 ```
 
+> **Important:** The program fully supports paths that contain characters such as ampersands (`&`), emoji, or characters from other languages. The Windows command interpreter treats `&` as a command separator, so if you type a command manually and the path contains `&`, escape it as `^&` (for example, `"C:\Games^&Art\cover.jpg"`). No extra steps are required when launching the tool from File Explorer.
+
 * When you pass exactly one argument and it is a folder, the program scans it for supported image files.
 * When you pass one or more file paths, every supported image is moved into a folder named after the file.
 * `--show-log` prints the error log, and `--clear-log` erases the log file so that the next run starts fresh.
@@ -81,35 +83,35 @@ The context menu is configured with a small registry script. The script adds a *
    "Icon"="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\""
 
    [HKEY_CLASSES_ROOT\SystemFileAssociations\.jpg\Shell\PushToFolders\Command]
-   @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" \"%1\""
+   @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" \"%*\""
 
    [HKEY_CLASSES_ROOT\SystemFileAssociations\.jpeg\Shell\PushToFolders]
    @="Push images into folders"
    "Icon"="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\""
 
    [HKEY_CLASSES_ROOT\SystemFileAssociations\.jpeg\Shell\PushToFolders\Command]
-   @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" \"%1\""
+   @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" \"%*\""
 
    [HKEY_CLASSES_ROOT\SystemFileAssociations\.png\Shell\PushToFolders]
    @="Push images into folders"
    "Icon"="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\""
 
    [HKEY_CLASSES_ROOT\SystemFileAssociations\.png\Shell\PushToFolders\Command]
-   @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" \"%1\""
+   @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" \"%*\""
 
    [HKEY_CLASSES_ROOT\SystemFileAssociations\.bmp\Shell\PushToFolders]
    @="Push images into folders"
    "Icon"="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\""
 
    [HKEY_CLASSES_ROOT\SystemFileAssociations\.bmp\Shell\PushToFolders\Command]
-   @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" \"%1\""
+   @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" \"%*\""
 
    [HKEY_CLASSES_ROOT\SystemFileAssociations\.webp\Shell\PushToFolders]
    @="Push images into folders"
    "Icon"="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\""
 
    [HKEY_CLASSES_ROOT\SystemFileAssociations\.webp\Shell\PushToFolders\Command]
-   @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" \"%1\""
+   @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" \"%*\""
    ```
 
 3. Save the file as `PushToFolders_ContextMenu.reg`.
