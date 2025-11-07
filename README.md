@@ -23,23 +23,21 @@ The comparison is case-insensitive.
 
 The project contains a single C++ source file that targets C++17 and only depends on the standard library.
 
-1. **Install a compiler**
-   * The simplest option is [MSYS2](https://www.msys2.org/). During installation choose the default settings.
-   * When the setup finishes, launch the *MSYS2 MinGW x64* shell and run the following commands to install the compiler:
-     ```sh
-     pacman -Syu
-     pacman -S --needed mingw-w64-x86_64-gcc
-     ```
+1. **Install Visual Studio 2022**
+   * Download [Visual Studio Community 2022](https://visualstudio.microsoft.com/) and run the installer.
+   * When prompted for workloads, tick **Desktop development with C++** and complete the installation using the default options. This installs the MSVC compiler (`cl.exe`).
 
-2. **Clone or copy the repository** to a convenient location, e.g. `C:\tools\PushToFolders`.
+2. **Open the Developer Command Prompt**
+   * Use the Start menu to search for **Developer Command Prompt for VS 2022** and launch it. The prompt configures the environment so that the compiler and Windows SDK tools are available.
 
-3. **Compile the program** from the *MSYS2 MinGW x64* shell:
-   ```sh
-   cd /c/tools/PushToFolders
-   g++ -std=c++17 -O2 -static -static-libstdc++ -static-libgcc src/main.cpp -o PushToFolders.exe
+3. **Compile the program**
+   * Copy the repository folder to a convenient location if you have not already done so (for example `C:\tools\PushToFolders`).
+   ```cmd
+   cd C:\tools\PushToFolders
+   cl /std:c++17 /EHsc /O2 /W4 /MT /Fe:PushToFolders.exe src\main.cpp
    ```
 
-   The `-static` switches ensure that the resulting `PushToFolders.exe` is fully self-contained and does not rely on external runtime DLLs.
+   The `/MT` switch links the static Microsoft C++ runtime so that `PushToFolders.exe` is fully self-contained and does not require separate redistributable packages.
 
 4. **Copy the executable** (`PushToFolders.exe`) to a folder that is easy to reference, for example `C:\Program Files\PushToFolders`. You can safely delete the source files if you only need the executable afterwards.
 

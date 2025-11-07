@@ -2,6 +2,7 @@
 #include <chrono>
 #include <cctype>
 #include <cstdlib>
+#include <cwctype>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -16,19 +17,31 @@ namespace fs = std::filesystem;
 
 namespace {
 
-std::string toLowerCopy(std::string text) {
-    std::transform(text.begin(), text.end(), text.begin(), [](unsigned char ch) {
-        return static_cast<char>(std::tolower(ch));
+using PathString = fs::path::string_type;
+
+#ifdef _WIN32
+#define PATH_LITERAL(str) L##str
+#else
+#define PATH_LITERAL(str) str
+#endif
+
+PathString toLowerCopy(PathString text) {
+    std::transform(text.begin(), text.end(), text.begin(), [](fs::path::value_type ch) {
+#ifdef _WIN32
+        return static_cast<fs::path::value_type>(std::towlower(ch));
+#else
+        return static_cast<fs::path::value_type>(std::tolower(static_cast<unsigned char>(ch)));
+#endif
     });
     return text;
 }
 
 bool isImageFile(const fs::path &path) {
-    static const std::set<std::string> kExtensions = {
-        ".jpg", ".jpeg", ".png", ".bmp", ".webp"
+    static const std::set<PathString> kExtensions = {
+        PATH_LITERAL(".jpg"), PATH_LITERAL(".jpeg"), PATH_LITERAL(".png"), PATH_LITERAL(".bmp"), PATH_LITERAL(".webp")
     };
 
-    auto ext = toLowerCopy(path.extension().string());
+    auto ext = toLowerCopy(path.extension().native());
     return kExtensions.count(ext) > 0;
 }
 
@@ -248,19 +261,20 @@ bool clearLogFile(const fs::path &path) {
     return static_cast<bool>(output);
 }
 
-} // namespace
-
-int main(int argc, char *argv[]) {
+int runApplication(const std::vector<PathString> &args) {
     Logger logger;
-    if (argc <= 1) {
+    if (args.empty()) {
         printUsage(logger.path());
         return 1;
     }
 
-    std::vector<std::string> args(argv + 1, argv + argc);
+    const PathString showLogLong = PATH_LITERAL("--show-log");
+    const PathString showLogShort = PATH_LITERAL("/showlog");
+    const PathString clearLogLong = PATH_LITERAL("--clear-log");
+    const PathString clearLogShort = PATH_LITERAL("/clearlog");
 
     if (args.size() == 1) {
-        if (args[0] == "--show-log" || args[0] == "/showlog") {
+        if (args[0] == showLogLong || args[0] == showLogShort) {
             auto contents = readFileContents(logger.path());
             if (!contents) {
                 std::cerr << "No log file found at " << logger.path() << "\n";
@@ -269,7 +283,7 @@ int main(int argc, char *argv[]) {
             std::cout << "Log file: " << logger.path() << "\n" << *contents;
             return 0;
         }
-        if (args[0] == "--clear-log" || args[0] == "/clearlog") {
+        if (args[0] == clearLogLong || args[0] == clearLogShort) {
             if (clearLogFile(logger.path())) {
                 std::cout << "Log file cleared: " << logger.path() << "\n";
                 return 0;
@@ -302,4 +316,32 @@ int main(int argc, char *argv[]) {
               << logger.path() << "\n";
     return success ? 0 : 1;
 }
+
+#undef PATH_LITERAL
+
+} // namespace
+
+#ifdef _WIN32
+int wmain(int argc, wchar_t *argv[]) {
+    std::vector<PathString> args;
+    if (argc > 1) {
+        args.reserve(static_cast<size_t>(argc - 1));
+    }
+    for (int i = 1; i < argc; ++i) {
+        args.emplace_back(argv[i]);
+    }
+    return runApplication(args);
+}
+#else
+int main(int argc, char *argv[]) {
+    std::vector<PathString> args;
+    if (argc > 1) {
+        args.reserve(static_cast<size_t>(argc - 1));
+    }
+    for (int i = 1; i < argc; ++i) {
+        args.emplace_back(argv[i]);
+    }
+    return runApplication(args);
+}
+#endif
 
