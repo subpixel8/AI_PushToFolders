@@ -15,9 +15,10 @@
 
 #ifdef _WIN32
 #define NOMINMAX
-#include <cstdio>
-#include <shellapi.h>
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <shellapi.h>
+#include <cstdio>
 #endif
 
 namespace fs = std::filesystem;
@@ -69,14 +70,30 @@ std::string timestampForLog() {
 
 fs::path detectLogFilePath() {
 #ifdef _WIN32
-    if (const char *localAppData = std::getenv("LOCALAPPDATA")) {
-        fs::path candidate = fs::path(localAppData) / "PushToFolders";
+    const auto readWideEnvPath = [](const wchar_t *name) -> std::optional<fs::path> {
+        DWORD size = GetEnvironmentVariableW(name, nullptr, 0);
+        if (size == 0) {
+            return std::nullopt;
+        }
+
+        std::wstring buffer(static_cast<size_t>(size), L'\0');
+        DWORD written = GetEnvironmentVariableW(name, buffer.data(), size);
+        if (written == 0 || written >= size) {
+            return std::nullopt;
+        }
+
+        buffer.resize(static_cast<size_t>(written));
+        return fs::path(buffer);
+    };
+
+    if (auto localAppData = readWideEnvPath(L"LOCALAPPDATA")) {
+        fs::path candidate = *localAppData / "PushToFolders";
         std::error_code ec;
         fs::create_directories(candidate, ec);
         return candidate / "PushToFolders.log";
     }
-    if (const char *userProfile = std::getenv("USERPROFILE")) {
-        return fs::path(userProfile) / "PushToFolders.log";
+    if (auto userProfile = readWideEnvPath(L"USERPROFILE")) {
+        return *userProfile / "PushToFolders.log";
     }
 #endif
     std::error_code ec;

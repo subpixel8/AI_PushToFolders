@@ -34,12 +34,12 @@ The project contains a single C++ source file that targets C++17 and only depend
    * Copy the repository folder to a convenient location if you have not already done so (for example `C:\tools\PushToFolders`).
    ```cmd
    cd C:\tools\PushToFolders
-   cl /std:c++17 /EHsc /O2 /W4 /MT /Fe:PushToFolders.exe src\main.cpp /link /SUBSYSTEM:WINDOWS
+   cl /std:c++17 /EHsc /O2 /W4 /MT /Fe:PushToFolders.exe src\main.cpp /link /SUBSYSTEM:WINDOWS shell32.lib
    ```
 
    The `/MT` switch links the static Microsoft C++ runtime so that `PushToFolders.exe` is fully self-contained and does not require separate redistributable packages.
 
-   Adding `/SUBSYSTEM:WINDOWS` prevents an extra console window from appearing when the tool is launched from File Explorer while still allowing it to reuse the console that invoked it from the command line.
+   Adding `/SUBSYSTEM:WINDOWS` prevents an extra console window from appearing when the tool is launched from File Explorer while still allowing it to reuse the console that invoked it from the command line. Linking against `shell32.lib` provides the Windows implementation of `CommandLineToArgvW`, which the program uses to parse Explorer-launched invocations.
 
 4. **Copy the executable** (`PushToFolders.exe`) to a folder that is easy to reference, for example `C:\Program Files\PushToFolders`. You can safely delete the source files if you only need the executable afterwards.
 
