@@ -520,7 +520,9 @@ int APIENTRY wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
         LocalFree(argv);
     }
 
+    bool attachedConsole = false;
     if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+        attachedConsole = true;
         FILE *dummy = nullptr;
         freopen_s(&dummy, "CONOUT$", "w", stdout);
         freopen_s(&dummy, "CONOUT$", "w", stderr);
@@ -531,6 +533,12 @@ int APIENTRY wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
     }
 
     int result = runApplication(std::move(args));
+
+    if (attachedConsole) {
+        fflush(stdout);
+        fflush(stderr);
+        FreeConsole();
+    }
 
     return result;
 }

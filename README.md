@@ -70,11 +70,11 @@ The context menu is configured with a small registry script. The script adds a *
 
    [HKEY_CURRENT_USER\Software\Classes\*\Shell\PushToFolders]
    @="Push files into folders"
-   "Icon"="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\""
+   "Icon"="\"E:\\AI_Generated_Apps\\PushToFolder\\PushToFolder.exe\""
    "MultiSelectModel"="Document"
 
    [HKEY_CURRENT_USER\Software\Classes\*\Shell\PushToFolders\Command]
-   @="\"C:\\Program Files\\PushToFolders\\PushToFolders.exe\" \"%1\""
+   @="\"E:\\AI_Generated_Apps\\PushToFolder\\PushToFolder.exe\" \"%1\""
    ```
 
 3. Save the file as `PushToFolders_ContextMenu.reg`.
